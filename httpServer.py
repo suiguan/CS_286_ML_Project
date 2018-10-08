@@ -1,6 +1,7 @@
 #reference: https://www.acmesystems.it/python_http
 from http.server import BaseHTTPRequestHandler,HTTPServer #Python 3
 import time
+import csv
 
 html_page = "\
 <!DOCTYPE html>\
@@ -39,11 +40,27 @@ class CustomHandler(BaseHTTPRequestHandler):
    def do_GET(self):
       print("GET === %s : headers = %s, path = %s" % (self.date_time_string(time.time()), self.headers, self.path))
 
+      # Log the header to csv
+      resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Referer",\
+"Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
+"Content-Type","Origin"]
+      results = []
+      results.append(self.date_time_string(time.time()))
+      results.append("GET")
+      for heading in resultHeadings:
+          if heading in self.headers:
+              results.append(self.headers.get(heading))
+          else:
+              results.append("NULL")
+      with open('httpHeadersData.csv', 'a+') as f: 
+          wr = csv.writer(f, dialect='excel')
+          wr.writerow(results)
+      
       # Send the header
       self.send_response(200)
       self.send_header('Content-type','text/html')
       self.end_headers()
-
+      
       # Send the html message
       self.wfile.write(html_page.encode()) #Python 3
 
@@ -56,8 +73,25 @@ class CustomHandler(BaseHTTPRequestHandler):
          if type(content_length) == list: length = int(content_length[0])
          length = int(content_length)
       postData = self.rfile.read(length).decode('utf-8')
+      
       print("POST === %s : headers = %s, path = %s, data = %s" % (self.date_time_string(time.time()), self.headers, self.path, postData))
       
+      # Log the header to csv
+      resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Referer",\
+"Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
+"Content-Type","Origin"]
+      results = []
+      results.append(self.date_time_string(time.time()))
+      results.append("POST")
+      for heading in resultHeadings:
+          if heading in self.headers:
+              results.append(self.headers.get(heading))
+          else:
+              results.append("NULL")      
+      with open('httpHeadersData.csv', 'a+') as f: 
+          wr = csv.writer(f, dialect='excel')
+          wr.writerow(results)
+          
       #send back 204 No Content
       self.send_response(204)
       self.end_headers()
