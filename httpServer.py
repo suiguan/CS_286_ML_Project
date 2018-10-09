@@ -35,26 +35,32 @@ html_page = "\
 </body>\
 </html>"
 
+
+f = open('malware.csv', 'a+')
+wr = csv.writer(f, dialect='excel')
+total_count = 1000
+count = 0
+
 class CustomHandler(BaseHTTPRequestHandler):
 
    def do_GET(self):
-      print("GET === %s : headers = %s, path = %s" % (self.date_time_string(time.time()), self.headers, self.path))
-
+      print("GET === %s : from %s headers = %s, path = %s" % (self.date_time_string(time.time()), self.client_address[0], self.headers, self.path)) 
       # Log the header to csv
       resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Referer",\
 "Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
 "Content-Type","Origin"]
       results = []
       results.append(self.date_time_string(time.time()))
+      results.append(self.client_address[0])
       results.append("GET")
       for heading in resultHeadings:
           if heading in self.headers:
               results.append(self.headers.get(heading))
           else:
               results.append("NULL")
-      with open('httpHeadersData.csv', 'a+') as f: 
-          wr = csv.writer(f, dialect='excel')
-          wr.writerow(results)
+      wr.writerow(results)
+      count += 1
+      if count >= total_count: raise Exception("Done")
       
       # Send the header
       self.send_response(200)
@@ -82,15 +88,16 @@ class CustomHandler(BaseHTTPRequestHandler):
 "Content-Type","Origin"]
       results = []
       results.append(self.date_time_string(time.time()))
+      results.append(self.client_address[0])
       results.append("POST")
       for heading in resultHeadings:
           if heading in self.headers:
               results.append(self.headers.get(heading))
           else:
               results.append("NULL")      
-      with open('httpHeadersData.csv', 'a+') as f: 
-          wr = csv.writer(f, dialect='excel')
-          wr.writerow(results)
+      wr.writerow(results)
+      count += 1
+      if count >= total_count: raise Exception("Done")
           
       #send back 204 No Content
       self.send_response(204)
