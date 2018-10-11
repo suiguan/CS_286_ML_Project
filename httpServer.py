@@ -59,6 +59,7 @@ class CustomHandler(BaseHTTPRequestHandler):
           else:
               results.append("NULL")
       wr.writerow(results)
+      global count
       count += 1
       if count >= total_count: raise Exception("Done")
       
@@ -96,6 +97,7 @@ class CustomHandler(BaseHTTPRequestHandler):
           else:
               results.append("NULL")      
       wr.writerow(results)
+      global count
       count += 1
       if count >= total_count: raise Exception("Done")
           
