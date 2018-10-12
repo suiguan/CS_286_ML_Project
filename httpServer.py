@@ -90,7 +90,7 @@ class CustomHandler(BaseHTTPRequestHandler):
 "Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
 "Content-Type","Origin"]
       results = []
-      results.append(self.date_time_string(time.time()))        #Time
+      results.append(time.time())                               #Time
       results.append(self.client_address[0])                    #Source-IP
       results.append("POST")                                    #Method-Type
       for heading in resultHeadings:
