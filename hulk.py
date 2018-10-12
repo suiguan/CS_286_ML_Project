@@ -88,7 +88,9 @@ def httpcall(url):
 	else:
 		param_joiner="?"
 	#request = urllib2.Request(url + param_joiner + buildblock(random.randint(3,10)) + '=' + buildblock(random.randint(3,10)))
-	request = urllib.request.Request(url + param_joiner + buildblock(random.randint(3,10)) + '=' + buildblock(random.randint(3,10)))
+	#request = urllib.request.Request(url + param_joiner + buildblock(random.randint(3,10)) + '=' + buildblock(random.randint(3,10)))
+	rInt = random.randint(1,8)
+	request = urllib.request.Request(url + param_joiner + 'btn%d=%d' % (rInt, rInt))
 	request.add_header('User-Agent', random.choice(headers_useragents))
 	request.add_header('Cache-Control', 'no-cache')
 	request.add_header('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')

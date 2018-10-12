@@ -50,7 +50,7 @@ class CustomHandler(BaseHTTPRequestHandler):
 "Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
 "Content-Type","Origin"]
       results = []
-      results.append(self.date_time_string(time.time()))
+      results.append(time.time())
       results.append(self.client_address[0])
       results.append("GET")
       for heading in resultHeadings:
@@ -81,7 +81,7 @@ class CustomHandler(BaseHTTPRequestHandler):
          length = int(content_length)
       postData = self.rfile.read(length).decode('utf-8')
       
-      print("POST === %s : headers = %s, path = %s, data = %s" % (self.date_time_string(time.time()), self.headers, self.path, postData))
+      print("POST === %s : headers = %s, path = %s, data = %s" % (time.time(), self.headers, self.path, postData))
       
       # Log the header to csv
       resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Referer",\
