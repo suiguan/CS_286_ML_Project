@@ -35,8 +35,10 @@ html_page = "\
 </body>\
 </html>"
 
+### HTTP Header columns being logged - Time,Source-IP,Method-Type,Host,User-Agent,Accept,Accept-Language,Accept-Encoding,Accept-Charset,Referer,Keep-Alive,Connection,Upgrade-Insecure-Requests,If-Modified-Since,If-None-Match,Cache-Control,Content-Length,Content-Type,Origin
+###
 
-f = open('malware.csv', 'a+')
+f = open('benign.csv', 'a+')
 wr = csv.writer(f, dialect='excel')
 total_count = 1000
 count = 0
@@ -46,13 +48,13 @@ class CustomHandler(BaseHTTPRequestHandler):
    def do_GET(self):
       print("GET === %s : from %s headers = %s, path = %s" % (self.date_time_string(time.time()), self.client_address[0], self.headers, self.path)) 
       # Log the header to csv
-      resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Referer",\
+      resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Accept-Charset","Referer","Keep-Alive",\
 "Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
 "Content-Type","Origin"]
       results = []
-      results.append(time.time())
-      results.append(self.client_address[0])
-      results.append("GET")
+      results.append(time.time())                   #Time
+      results.append(self.client_address[0])        #Source-IP
+      results.append("GET")                         #Method-Type
       for heading in resultHeadings:
           if heading in self.headers:
               results.append(self.headers.get(heading))
@@ -84,13 +86,13 @@ class CustomHandler(BaseHTTPRequestHandler):
       print("POST === %s : headers = %s, path = %s, data = %s" % (time.time(), self.headers, self.path, postData))
       
       # Log the header to csv
-      resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Referer",\
+      resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Accept-Charset","Referer","Keep-Alive",\
 "Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
 "Content-Type","Origin"]
       results = []
-      results.append(self.date_time_string(time.time()))
-      results.append(self.client_address[0])
-      results.append("POST")
+      results.append(self.date_time_string(time.time()))        #Time
+      results.append(self.client_address[0])                    #Source-IP
+      results.append("POST")                                    #Method-Type
       for heading in resultHeadings:
           if heading in self.headers:
               results.append(self.headers.get(heading))
