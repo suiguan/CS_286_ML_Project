@@ -38,7 +38,7 @@ html_page = "\
 ### HTTP Header columns being logged - Time,Source-IP,Method-Type,Host,User-Agent,Accept,Accept-Language,Accept-Encoding,Accept-Charset,Referer,Keep-Alive,Connection,Upgrade-Insecure-Requests,If-Modified-Since,If-None-Match,Cache-Control,Content-Length,Content-Type,Origin
 ###
 
-f = open('benign.csv', 'a+')
+f = open('malware.csv', 'a+')
 wr = csv.writer(f, dialect='excel')
 total_count = 1000
 count = 0
