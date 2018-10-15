@@ -35,12 +35,21 @@ html_page = "\
 </body>\
 </html>"
 
+resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Accept-Charset","Referer","Keep-Alive",\
+"Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
+"Content-Type","Origin"] #http headers used
+csvHeadingStr = "Time,Source-IP,Method-Type,Path," 
+for h in resultHeadings: csvHeadingStr += ("%s," % h)
+csvHeadingStr += "\n"
+
 csvFileName = 'benign.csv'
-if False: #enable this will overwrite existing file with the same name!!
+
+if True: #enable this will overwrite existing file with the same name!!
    f = open(csvFileName, 'w')
-   f.write("Time,Source-IP,Method-Type,Host,User-Agent,Accept,Accept-Language,Accept-Encoding,Accept-Charset,Referer,Keep-Alive,Connection,Upgrade-Insecure-Requests,If-Modified-Since,If-None-Match,Cache-Control,Content-Length,Content-Type,Origin\n") # HTTP Header columns to be logged
+   f.write(csvHeadingStr)
 else:
    f = open(csvFileName, 'a+')
+
 
 wr = csv.writer(f, dialect='excel')
 total_count = 1000
@@ -51,16 +60,14 @@ class CustomHandler(BaseHTTPRequestHandler):
    def do_GET(self):
       print("GET === %s : from %s headers = %s, path = %s" % (self.date_time_string(time.time()), self.client_address[0], self.headers, self.path)) 
       # Log the header to csv
-      resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Accept-Charset","Referer","Keep-Alive",\
-"Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
-"Content-Type","Origin"]
       results = []
       results.append(time.time())                   #Time
       results.append(self.client_address[0])        #Source-IP
       results.append("GET")                         #Method-Type
+      results.append(self.path.replace(',','.'))
       for heading in resultHeadings:
           if heading in self.headers:
-              results.append(self.headers.get(heading))
+              results.append(self.headers.get(heading).replace(',','.'))
           else:
               results.append("NULL")
       wr.writerow(results)
@@ -89,16 +96,14 @@ class CustomHandler(BaseHTTPRequestHandler):
       print("POST === %s : headers = %s, path = %s, data = %s" % (time.time(), self.headers, self.path, postData))
       
       # Log the header to csv
-      resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Accept-Charset","Referer","Keep-Alive",\
-"Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
-"Content-Type","Origin"]
       results = []
       results.append(time.time())                               #Time
       results.append(self.client_address[0])                    #Source-IP
       results.append("POST")                                    #Method-Type
+      results.append(self.path.replace(',','.'))
       for heading in resultHeadings:
           if heading in self.headers:
-              results.append(self.headers.get(heading))
+              results.append(self.headers.get(heading).replace(',','.'))
           else:
               results.append("NULL")      
       wr.writerow(results)
@@ -115,7 +120,7 @@ if __name__ == '__main__':
    PORT_NUMBER = 8000
    try:
       #Create a web server with our handler
-      server = HTTPServer(('127.0.0.1', PORT_NUMBER), CustomHandler)
+      server = HTTPServer(('0.0.0.0', PORT_NUMBER), CustomHandler)
       print('Started httpserver on port %d' % PORT_NUMBER)
       
       #Wait forever for incoming http requests
