@@ -44,7 +44,7 @@ csvHeadingStr += "\n"
 
 csvFileName = 'benign.csv'
 
-if True: #enable this will overwrite existing file with the same name!!
+if False: #enable this will overwrite existing file with the same name!!
    f = open(csvFileName, 'w')
    f.write(csvHeadingStr)
 else:
