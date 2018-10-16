@@ -34,6 +34,7 @@ html_page = "\
 </form><br>\
 </body>\
 </html>"
+htmlLength = len(html_page)
 
 resultHeadings = ["Host","User-Agent","Accept","Accept-Language","Accept-Encoding","Accept-Charset","Referer","Keep-Alive",\
 "Connection","Upgrade-Insecure-Requests","If-Modified-Since","If-None-Match","Cache-Control","Content-Length",\
@@ -52,7 +53,7 @@ else:
 
 
 wr = csv.writer(f, dialect='excel')
-total_count = 1000
+total_count = 800
 count = 0
 
 class CustomHandler(BaseHTTPRequestHandler):
@@ -75,13 +76,27 @@ class CustomHandler(BaseHTTPRequestHandler):
       count += 1
       if count >= total_count: raise Exception("Done")
       
+      content_length = self.headers.get('content-length') #python 3, python 2 uses getheader()
+      length = 0
+      if content_length: 
+         if type(content_length) == list: length = int(content_length[0])
+         length = int(content_length)
+      postData = self.rfile.read(length).decode('utf-8')
+
       # Send the header
-      self.send_response(200)
-      self.send_header('Content-type','text/html')
-      self.end_headers()
-      
-      # Send the html message
-      self.wfile.write(html_page.encode()) #Python 3
+      if self.path == "/":
+         self.send_response(200)
+         self.send_header('Content-type','text/html')
+         self.send_header('Content-Length', htmlLength)
+         self.end_headers()
+         
+         # Send the html message
+         self.wfile.write(html_page.encode()) #Python 3
+
+      else:
+         self.send_response(204)
+         self.send_header('Content-Length', 0)
+         self.end_headers()
 
       return
 
@@ -113,6 +128,7 @@ class CustomHandler(BaseHTTPRequestHandler):
           
       #send back 204 No Content
       self.send_response(204)
+      self.send_header('Content-Length', 0)
       self.end_headers()
       return
 
@@ -120,7 +136,7 @@ if __name__ == '__main__':
    PORT_NUMBER = 8000
    try:
       #Create a web server with our handler
-      server = HTTPServer(('0.0.0.0', PORT_NUMBER), CustomHandler)
+      server = HTTPServer(('127.0.0.1', PORT_NUMBER), CustomHandler)
       print('Started httpserver on port %d' % PORT_NUMBER)
       
       #Wait forever for incoming http requests
