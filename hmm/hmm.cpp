@@ -18,12 +18,14 @@
 #define LEARNING_RATE 1.0
 
 
-//#define USER_AGENT //define this to use UA feature for HMM. Otherwise, it will use path feature for HMM
+#define USER_AGENT //define this to use UA feature for HMM. Otherwise, it will use path feature for HMM
 
 #ifdef USER_AGENT
 static const std::string ObserSet = "012345678"; //we have 9 different UA
+std::string feaStr = "UserAgent";
 #else
 static const std::string ObserSet = "01234567"; //we have 8 different path
+std::string feaStr = "Path";
 #endif
 
 HMM::HMM(int N, int M, int minIters, float epsilon)
@@ -571,15 +573,16 @@ void dumpScores(HMM* hmm, std::string label, int* obsers, int total, int t, std:
 
 #ifndef _NO_MAIN
 int main(int argc, const char** argv) {
-   if (argc != 6) {
-      printf("Usage: %s <N> <minIters> <epsilon> <score file> <# observations for scores>\n", argv[0]);
+   if (argc != 7) {
+      printf("Usage: %s <N> <minIters> <epsilon> <hmm score file> <train_test_file_prefix> <# observations for scores>\n", argv[0]);
       return -1;
    }
    const int N = std::stoi(argv[1]);
    const int minIters = std::stoi(argv[2]);
    const float epsilon = std::stof(argv[3]);
    std::string scoreFile = argv[4];
-   const int numObsersScore = std::stoi(argv[5]);
+   std::string train_test_prefix = argv[5];
+   const int numObsersScore = std::stoi(argv[6]);
 
    //5-fold cross validation
    for (int fold = 0; fold < 5; fold++) {
@@ -608,12 +611,6 @@ int main(int argc, const char** argv) {
          printf("no memory\n");
          return -3;
       }
-
-#ifdef USER_AGENT
-std::string feaStr = "UserAgent";
-#else
-std::string feaStr = "Path";
-#endif
 
 #ifdef GRAD_DESCENT
       printf("start training HMM (using feature %s) for (fold %d) seq N = %d, M = %d, minIters = %d, eps = %.6f, T = %d, learning rate = %f, temp = %f\n", 
@@ -673,11 +670,70 @@ std::string feaStr = "Path";
       //int cor = predictMapping(hmm);
 #endif
 
+      //also save for 5 fold train/test for PCA, SVM, NN, etc...
+      std::string fname1 = train_test_prefix + ".train1.txt";
+      std::string fname2 = train_test_prefix + ".test1.txt";
+      std::string fname3 = train_test_prefix + ".test1.txt";
+      std::string fname4 = train_test_prefix + ".test1.txt";
+      std::string fname5 = train_test_prefix + ".test1.txt";
+      if (fold == 1) {
+         fname1 = train_test_prefix + ".test2.txt";
+         fname2 = train_test_prefix + ".train2.txt";
+         fname3 = train_test_prefix + ".test2.txt";
+         fname4 = train_test_prefix + ".test2.txt";
+         fname5 = train_test_prefix + ".test2.txt";
+      }
+      else if (fold == 2) {
+         fname1 = train_test_prefix + ".test3.txt";
+         fname2 = train_test_prefix + ".test3.txt";
+         fname3 = train_test_prefix + ".train3.txt";
+         fname4 = train_test_prefix + ".test3.txt";
+         fname5 = train_test_prefix + ".test3.txt";
+      }
+      else if (fold == 3) {
+         fname1 = train_test_prefix + ".test4.txt";
+         fname2 = train_test_prefix + ".test4.txt";
+         fname3 = train_test_prefix + ".test4.txt";
+         fname4 = train_test_prefix + ".train4.txt";
+         fname5 = train_test_prefix + ".test4.txt";
+      }
+      else if (fold == 4) {
+         fname1 = train_test_prefix + ".test5.txt";
+         fname2 = train_test_prefix + ".test5.txt";
+         fname3 = train_test_prefix + ".test5.txt";
+         fname4 = train_test_prefix + ".test5.txt";
+         fname5 = train_test_prefix + ".train5.txt";
+      }
+      total = sizeof(b1) / 4;
+      printf("total b1 = %d\n", total);
+      dumpScores(hmm, "m", m1, T, numObsersScore, fname1); 
+      dumpScores(hmm, "b", b1, total, numObsersScore, fname1); 
+
+      total = sizeof(b2) / 4;
+      printf("total b2 = %d\n", total);
+      dumpScores(hmm, "m", m2, T, numObsersScore, fname2); 
+      dumpScores(hmm, "b", b2, total, numObsersScore, fname2); 
+
+      total = sizeof(b3) / 4;
+      printf("total b3 = %d\n", total);
+      dumpScores(hmm, "m", m3, T, numObsersScore, fname3); 
+      dumpScores(hmm, "b", b3, total, numObsersScore, fname3); 
+
+      total = sizeof(b4) / 4;
+      printf("total b4 = %d\n", total);
+      dumpScores(hmm, "m", m4, T, numObsersScore, fname4); 
+      dumpScores(hmm, "b", b4, total, numObsersScore, fname4); 
+
+      total = sizeof(b5) / 4;
+      printf("total b5 = %d\n", total);
+      dumpScores(hmm, "m", m5, T, numObsersScore, fname5); 
+      dumpScores(hmm, "b", b5, total, numObsersScore, fname5); 
+
       //clean up
       delete hmm;
    }
 
-   printf("finished 5 fold cross validation HMM\n");
+   printf("finished 5 fold cross validation HMM, feature used = %s\n", feaStr.c_str());
    return 0;
 }
 #endif
