@@ -4,6 +4,7 @@
 #include <cmath>
 #include <string>
 #include <fstream>
+#include <string.h>
 #include "hmm.h"
 
 //#define USE_FIXED_DIGRAPH //enable this define to use a fixed A matrix from a pre-defined digraph
@@ -18,7 +19,7 @@
 #define LEARNING_RATE 1.0
 
 
-#define USER_AGENT //define this to use UA feature for HMM. Otherwise, it will use path feature for HMM
+//#define USER_AGENT //define this to use UA feature for HMM. Otherwise, it will use path feature for HMM
 
 #ifdef USER_AGENT
 static const std::string ObserSet = "012345678"; //we have 9 different UA
@@ -589,24 +590,104 @@ int main(int argc, const char** argv) {
    //5-fold cross validation
    for (int fold = 0; fold < 5; fold++) {
 
-      int T = sizeof(m1) / 4; //4-bytes per integer 
-      int* obsers = m1; 
-      if (fold == 1) {
-         T = sizeof(m2) / 4;
-         obsers = m2; 
+      int T = (sizeof(m1) + sizeof(m2) + sizeof(m3) + sizeof(m4) + sizeof(m5))/ 4; //4-bytes per integer 
+      int* obsers = NULL;
+      if (fold == 0) {
+         T -= (sizeof(m5) / 4);
+
+         obsers = (int*)malloc(sizeof(int)*T); 
+         if (!obsers) { 
+            printf("no memory\n");
+            return -2;
+         }
+
+         int* optr = obsers;
+         memcpy((void*)optr, m1, sizeof(m1));
+         optr += (sizeof(m1)/4);
+         memcpy((void*)optr, m2, sizeof(m2));
+         optr += (sizeof(m2)/4);
+         memcpy((void*)optr, m3, sizeof(m3));
+         optr += (sizeof(m3)/4);
+         memcpy((void*)optr, m4, sizeof(m4));
+         optr += (sizeof(m4)/4);
+      }
+      else if (fold == 1) {
+         T -= sizeof(m4) / 4;
+
+         obsers = (int*)malloc(sizeof(int)*T); 
+         if (!obsers) { 
+            printf("no memory\n");
+            return -2;
+         }
+
+         int* optr = obsers;
+         memcpy((void*)optr, m1, sizeof(m1));
+         optr += (sizeof(m1)/4);
+         memcpy((void*)optr, m2, sizeof(m2));
+         optr += (sizeof(m2)/4);
+         memcpy((void*)optr, m3, sizeof(m3));
+         optr += (sizeof(m3)/4);
+         memcpy((void*)optr, m5, sizeof(m5));
+         optr += (sizeof(m5)/4);
       }
       else if (fold == 2) {
-         T = sizeof(m3) / 4;
-         obsers = m3; 
+         T -= sizeof(m3) / 4;
+
+         obsers = (int*)malloc(sizeof(int)*T); 
+         if (!obsers) { 
+            printf("no memory\n");
+            return -2;
+         }
+
+         int* optr = obsers;
+         memcpy((void*)optr, m1, sizeof(m1));
+         optr += (sizeof(m1)/4);
+         memcpy((void*)optr, m2, sizeof(m2));
+         optr += (sizeof(m2)/4);
+         memcpy((void*)optr, m4, sizeof(m4));
+         optr += (sizeof(m4)/4);
+         memcpy((void*)optr, m5, sizeof(m5));
+         optr += (sizeof(m5)/4);
       }
       else if (fold == 3) {
-         T = sizeof(m4) / 4;
-         obsers = m4; 
+         T -= sizeof(m2) / 4;
+
+         obsers = (int*)malloc(sizeof(int)*T); 
+         if (!obsers) { 
+            printf("no memory\n");
+            return -2;
+         }
+
+         int* optr = obsers;
+         memcpy((void*)optr, m1, sizeof(m1));
+         optr += (sizeof(m1)/4);
+         memcpy((void*)optr, m3, sizeof(m3));
+         optr += (sizeof(m3)/4);
+         memcpy((void*)optr, m4, sizeof(m4));
+         optr += (sizeof(m4)/4);
+         memcpy((void*)optr, m5, sizeof(m5));
+         optr += (sizeof(m5)/4);
       }
       else if (fold == 4) {
-         T = sizeof(m5) / 4;
-         obsers = m5; 
+         T -= sizeof(m1) / 4;
+
+         obsers = (int*)malloc(sizeof(int)*T); 
+         if (!obsers) { 
+            printf("no memory\n");
+            return -2;
+         }
+
+         int* optr = obsers;
+         memcpy((void*)optr, m2, sizeof(m2));
+         optr += (sizeof(m2)/4);
+         memcpy((void*)optr, m3, sizeof(m3));
+         optr += (sizeof(m3)/4);
+         memcpy((void*)optr, m4, sizeof(m4));
+         optr += (sizeof(m4)/4);
+         memcpy((void*)optr, m5, sizeof(m5));
+         optr += (sizeof(m5)/4);
       }
+
       //start training
       HMM* hmm = new HMM(N, M, minIters, epsilon);
       if (!hmm) {
@@ -622,38 +703,25 @@ int main(int argc, const char** argv) {
          feaStr.c_str(), fold, N, M, minIters, epsilon, T);
 #endif
       hmm->fit(obsers, T);
+      free(obsers);
+      obsers = NULL;
 
       //create scores
       printf("creating scores on file %s using consecutive %d observations\n", scoreFile.c_str(), numObsersScore);
       if (fold == 0) {
-         dumpScores(hmm, "m", m2, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m3, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m4, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m5, T, numObsersScore, scoreFile); 
+         dumpScores(hmm, "m", m5, sizeof(m5)/4, numObsersScore, scoreFile); 
       }
       else if (fold == 1) {
-         dumpScores(hmm, "m", m1, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m3, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m4, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m5, T, numObsersScore, scoreFile); 
+         dumpScores(hmm, "m", m4, sizeof(m4)/4, numObsersScore, scoreFile); 
       }
       else if (fold == 2) {
-         dumpScores(hmm, "m", m1, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m2, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m4, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m5, T, numObsersScore, scoreFile); 
+         dumpScores(hmm, "m", m3, sizeof(m3)/4, numObsersScore, scoreFile); 
       }
       else if (fold == 3) {
-         dumpScores(hmm, "m", m1, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m2, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m3, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m5, T, numObsersScore, scoreFile); 
+         dumpScores(hmm, "m", m2, sizeof(m2)/4, numObsersScore, scoreFile); 
       }
       else if (fold == 4) {
-         dumpScores(hmm, "m", m1, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m2, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m3, T, numObsersScore, scoreFile); 
-         dumpScores(hmm, "m", m4, T, numObsersScore, scoreFile); 
+         dumpScores(hmm, "m", m1, sizeof(m1)/4, numObsersScore, scoreFile); 
       }
 
       //score benign
@@ -674,61 +742,61 @@ int main(int argc, const char** argv) {
 
       //also save for 5 fold train/test for PCA, SVM, NN, etc...
       std::string fname1 = train_test_prefix + ".train1.txt";
-      std::string fname2 = train_test_prefix + ".test1.txt";
-      std::string fname3 = train_test_prefix + ".test1.txt";
-      std::string fname4 = train_test_prefix + ".test1.txt";
+      std::string fname2 = train_test_prefix + ".train1.txt";
+      std::string fname3 = train_test_prefix + ".train1.txt";
+      std::string fname4 = train_test_prefix + ".train1.txt";
       std::string fname5 = train_test_prefix + ".test1.txt";
       if (fold == 1) {
-         fname1 = train_test_prefix + ".test2.txt";
+         fname1 = train_test_prefix + ".train2.txt";
          fname2 = train_test_prefix + ".train2.txt";
-         fname3 = train_test_prefix + ".test2.txt";
+         fname3 = train_test_prefix + ".train2.txt";
          fname4 = train_test_prefix + ".test2.txt";
-         fname5 = train_test_prefix + ".test2.txt";
+         fname5 = train_test_prefix + ".train2.txt";
       }
       else if (fold == 2) {
-         fname1 = train_test_prefix + ".test3.txt";
-         fname2 = train_test_prefix + ".test3.txt";
-         fname3 = train_test_prefix + ".train3.txt";
-         fname4 = train_test_prefix + ".test3.txt";
-         fname5 = train_test_prefix + ".test3.txt";
+         fname1 = train_test_prefix + ".train3.txt";
+         fname2 = train_test_prefix + ".train3.txt";
+         fname3 = train_test_prefix + ".test3.txt";
+         fname4 = train_test_prefix + ".train3.txt";
+         fname5 = train_test_prefix + ".train3.txt";
       }
       else if (fold == 3) {
-         fname1 = train_test_prefix + ".test4.txt";
+         fname1 = train_test_prefix + ".train4.txt";
          fname2 = train_test_prefix + ".test4.txt";
-         fname3 = train_test_prefix + ".test4.txt";
+         fname3 = train_test_prefix + ".train4.txt";
          fname4 = train_test_prefix + ".train4.txt";
-         fname5 = train_test_prefix + ".test4.txt";
+         fname5 = train_test_prefix + ".train4.txt";
       }
       else if (fold == 4) {
          fname1 = train_test_prefix + ".test5.txt";
-         fname2 = train_test_prefix + ".test5.txt";
-         fname3 = train_test_prefix + ".test5.txt";
-         fname4 = train_test_prefix + ".test5.txt";
+         fname2 = train_test_prefix + ".train5.txt";
+         fname3 = train_test_prefix + ".train5.txt";
+         fname4 = train_test_prefix + ".train5.txt";
          fname5 = train_test_prefix + ".train5.txt";
       }
       total = sizeof(b1) / 4;
       printf("total b1 = %d\n", total);
-      dumpScores(hmm, "m", m1, T, numObsersScore, fname1); 
+      dumpScores(hmm, "m", m1, sizeof(m1)/4, numObsersScore, fname1); 
       dumpScores(hmm, "b", b1, total, numObsersScore, fname1); 
 
       total = sizeof(b2) / 4;
       printf("total b2 = %d\n", total);
-      dumpScores(hmm, "m", m2, T, numObsersScore, fname2); 
+      dumpScores(hmm, "m", m2, sizeof(m2)/4, numObsersScore, fname2); 
       dumpScores(hmm, "b", b2, total, numObsersScore, fname2); 
 
       total = sizeof(b3) / 4;
       printf("total b3 = %d\n", total);
-      dumpScores(hmm, "m", m3, T, numObsersScore, fname3); 
+      dumpScores(hmm, "m", m3, sizeof(m3)/4, numObsersScore, fname3); 
       dumpScores(hmm, "b", b3, total, numObsersScore, fname3); 
 
       total = sizeof(b4) / 4;
       printf("total b4 = %d\n", total);
-      dumpScores(hmm, "m", m4, T, numObsersScore, fname4); 
+      dumpScores(hmm, "m", m4, sizeof(m4)/4, numObsersScore, fname4); 
       dumpScores(hmm, "b", b4, total, numObsersScore, fname4); 
 
       total = sizeof(b5) / 4;
       printf("total b5 = %d\n", total);
-      dumpScores(hmm, "m", m5, T, numObsersScore, fname5); 
+      dumpScores(hmm, "m", m5, sizeof(m5)/4, numObsersScore, fname5); 
       dumpScores(hmm, "b", b5, total, numObsersScore, fname5); 
 
       //clean up
