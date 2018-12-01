@@ -1,6 +1,7 @@
 # CS_286_ML_Project
 
 This is the team project for the class CS 286 in SJSU for semester Fall 2018. The goal of the team project is to apply advanced machine learning technique to detect Denial of Service (Dos) attacks at the HTTP server application level.
+
 Authors: Deepti Garg & Sui Kun Guan 
 
 Code structure:
